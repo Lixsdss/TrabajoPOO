@@ -8,7 +8,7 @@ import java.util.List;
 public class Estudiante extends Usuario {
     // --- Atributos Específicos del Estudiante ---
     
-    private String prueba;
+    private String prueba2;
     private String matricula;
     private Date fechaIngreso;
     
