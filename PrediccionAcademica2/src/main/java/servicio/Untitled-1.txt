@@ -1,0 +1,989 @@
+import java.util.*;
+import java.time.*;
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.*;
+import java.lang.reflect.*;
+
+enum RolUsuario {
+    ADMIN, PROFESOR, ESTUDIANTE
+}
+
+enum NivelRiesgo {
+    BAJO, MEDIO, ALTO, CRITICO
+}
+
+abstract class Usuario {
+    private int id;
+    private String nombre;
+    private String apellido;
+    private String email;
+    private String password;
+    private RolUsuario rol;
+
+    public Usuario(int id, String nombre, String apellido, String email, String password, RolUsuario rol) {
+        this.id = id;
+        this.nombre = nombre;
+        this.apellido = apellido;
+        this.email = email;
+        this.password = password;
+        this.rol = rol;
+    }
+
+    public Usuario(String nombre, String apellido, String email, String password, RolUsuario rol) {
+        this(0, nombre, apellido, email, password, rol);
+    }
+
+    public abstract void mostrarInformacion();
+
+    public int getId() { return id; }
+    public void setId(int id) { this.id = id; }
+    public String getNombre() { return nombre; }
+    public String getApellido() { return apellido; }
+    public String getEmail() { return email; }
+    public String getPassword() { return password; }
+    public RolUsuario getRol() { return rol; }
+}
+
+class Admin extends Usuario {
+    private String nivelAcceso;
+
+    public Admin(int id, String nombre, String apellido, String email, String password, String nivelAcceso) {
+        super(id, nombre, apellido, email, password, RolUsuario.ADMIN);
+        this.nivelAcceso = nivelAcceso;
+    }
+
+    public Admin(String nombre, String apellido, String email, String password, String nivelAcceso) {
+        super(nombre, apellido, email, password, RolUsuario.ADMIN);
+        this.nivelAcceso = nivelAcceso;
+    }
+
+    @Override
+    public void mostrarInformacion() {
+        System.out.println("Administrador: " + getNombre() + " " + getApellido() + " | Nivel: " + nivelAcceso);
+    }
+
+    public String getNivelAcceso() { return nivelAcceso; }
+}
+
+class Profesor extends Usuario {
+    private String departamento;
+    private List<Seccion> seccionesImpartidas;
+
+    public Profesor(int id, String nombre, String apellido, String email, String password, String departamento) {
+        super(id, nombre, apellido, email, password, RolUsuario.PROFESOR);
+        this.departamento = departamento;
+        this.seccionesImpartidas = new ArrayList<>();
+    }
+
+    public Profesor(String nombre, String apellido, String email, String password, String departamento) {
+        super(nombre, apellido, email, password, RolUsuario.PROFESOR);
+        this.departamento = departamento;
+        this.seccionesImpartidas = new ArrayList<>();
+    }
+
+    @Override
+    public void mostrarInformacion() {
+        System.out.println("Profesor: " + getNombre() + " " + getApellido() + " | Departamento: " + departamento);
+    }
+
+    public void asignarSeccion(Seccion seccion) {
+        if (seccion != null && !this.seccionesImpartidas.contains(seccion)) {
+            this.seccionesImpartidas.add(seccion);
+            seccion.setProfesor(this);
+        }
+    }
+
+    public String getDepartamento() { return departamento; }
+    public List<Seccion> getSeccionesImpartidas() { return new ArrayList<>(seccionesImpartidas); }
+}
+
+class Estudiante extends Usuario {
+    private String matricula;
+    private Date fechaIngreso;
+    private List<Matricula> matriculas;
+    private HistorialAcademico historialAcademico;
+    private List<PrediccionRendimiento> predicciones;
+    private double horasEstudioSemanales;
+    private int nivelParticipacionClase;
+
+    public Estudiante(int id, String nombre, String apellido, String email, String password, String matricula, Date fechaIngreso) {
+        super(id, nombre, apellido, email, password, RolUsuario.ESTUDIANTE);
+        this.matricula = matricula;
+        this.fechaIngreso = fechaIngreso;
+        this.matriculas = new ArrayList<>();
+        this.historialAcademico = new HistorialAcademico(this);
+        this.predicciones = new ArrayList<>();
+        this.horasEstudioSemanales = 0.0;
+        this.nivelParticipacionClase = 5;
+    }
+
+    public Estudiante(String nombre, String apellido, String email, String password, String matricula, Date fechaIngreso) {
+        super(nombre, apellido, email, password, RolUsuario.ESTUDIANTE);
+        this.matricula = matricula;
+        this.fechaIngreso = fechaIngreso;
+        this.matriculas = new ArrayList<>();
+        this.historialAcademico = new HistorialAcademico(this);
+        this.predicciones = new ArrayList<>();
+        this.horasEstudioSemanales = 0.0;
+        this.nivelParticipacionClase = 5;
+    }
+
+    @Override
+    public void mostrarInformacion() {
+        System.out.println("Estudiante: " + getNombre() + " " + getApellido() + " | Matrícula: " + matricula);
+    }
+
+    public void agregarMatricula(Matricula matricula) {
+        if (matricula != null && !this.matriculas.contains(matricula)) {
+            this.matriculas.add(matricula);
+        }
+    }
+
+    public void agregarPrediccion(PrediccionRendimiento prediccion) {
+        if (prediccion != null && !this.predicciones.contains(prediccion)) {
+            this.predicciones.add(prediccion);
+            prediccion.setEstudiante(this);
+        }
+    }
+
+    public double getPromedioGeneral() {
+        return this.historialAcademico.calcularPromedioHistorico();
+    }
+
+    public String getMatricula() { return matricula; }
+    public Date getFechaIngreso() { return fechaIngreso; }
+    public List<Matricula> getMatriculas() { return new ArrayList<>(matriculas); }
+    public HistorialAcademico getHistorialAcademico() { return historialAcademico; }
+    public List<PrediccionRendimiento> getPredicciones() { return new ArrayList<>(predicciones); }
+    public double getHorasEstudioSemanales() { return horasEstudioSemanales; }
+    public void setHorasEstudioSemanales(double horasEstudioSemanales) { this.horasEstudioSemanales = horasEstudioSemanales; }
+    public int getNivelParticipacionClase() { return nivelParticipacionClase; }
+    public void setNivelParticipacionClase(int nivelParticipacionClase) {
+        if (nivelParticipacionClase >= 1 && nivelParticipacionClase <= 10) {
+            this.nivelParticipacionClase = nivelParticipacionClase;
+        }
+    }
+}
+
+class Curso {
+    private int id;
+    private String nombre;
+    private String descripcion;
+    private int creditos;
+    private String area;
+    private int nivelDificultad;
+    private List<Seccion> seccionesOfertadas;
+
+    public Curso(int id, String nombre, String descripcion, int creditos, String area, int nivelDificultad) {
+        this.id = id;
+        this.nombre = nombre;
+        this.descripcion = descripcion;
+        this.creditos = creditos;
+        this.area = area;
+        this.nivelDificultad = Math.max(1, Math.min(10, nivelDificultad));
+        this.seccionesOfertadas = new ArrayList<>();
+    }
+
+    public Curso(String nombre, String descripcion, int creditos, String area, int nivelDificultad) {
+        this(0, nombre, descripcion, creditos, area, nivelDificultad);
+    }
+
+    public void agregarSeccion(Seccion seccion) {
+        if (seccion != null && !this.seccionesOfertadas.contains(seccion)) {
+            this.seccionesOfertadas.add(seccion);
+            if (seccion.getCurso() != this) {
+                seccion.setCurso(this);
+            }
+        }
+    }
+
+    public List<Estudiante> getTodosLosEstudiantesInscritos() {
+        return this.seccionesOfertadas.stream()
+                .flatMap(seccion -> seccion.getEstudiantesMatriculados().stream())
+                .distinct()
+                .collect(Collectors.toList());
+    }
+
+    public int getId() { return id; }
+    public void setId(int id) { this.id = id; }
+    public String getNombre() { return nombre; }
+    public String getDescripcion() { return descripcion; }
+    public int getCreditos() { return creditos; }
+    public String getArea() { return area; }
+    public int getNivelDificultad() { return nivelDificultad; }
+    public List<Seccion> getSeccionesOfertadas() { return new ArrayList<>(seccionesOfertadas); }
+}
+
+class Aula {
+    private String codigo;
+    private int capacidad;
+    private List<Seccion> secciones;
+
+    public Aula(String codigo, int capacidad) {
+        this.codigo = codigo;
+        this.capacidad = capacidad;
+        this.secciones = new ArrayList<>();
+    }
+
+    public void agregarSeccion(Seccion seccion) {
+        if (seccion != null && !secciones.contains(seccion)) {
+            secciones.add(seccion);
+            if (seccion.getAula() != this) {
+                seccion.setAula(this);
+            }
+        }
+    }
+
+    public String getCodigo() { return codigo; }
+    public int getCapacidad() { return capacidad; }
+    public List<Seccion> getSecciones() { return new ArrayList<>(secciones); }
+}
+
+class Seccion {
+    private int id;
+    private String nombreSeccion;
+    private String semestre;
+    private Curso curso;
+    private Profesor profesor;
+    private Aula aula;
+    private List<Matricula> matriculas;
+
+    public Seccion(int id, String nombreSeccion, String semestre, Curso curso, Profesor profesor, Aula aula) {
+        this.id = id;
+        this.nombreSeccion = nombreSeccion;
+        this.semestre = semestre;
+        this.curso = curso;
+        this.profesor = profesor;
+        this.aula = aula;
+        this.matriculas = new ArrayList<>();
+    }
+
+    public Seccion(String nombreSeccion, String semestre, Curso curso, Profesor profesor, Aula aula) {
+        this(0, nombreSeccion, semestre, curso, profesor, aula);
+    }
+
+    public void matricularEstudiante(Estudiante estudiante) {
+        if (estudiante != null && !estaLleno()) {
+            Matricula nuevaMatricula = new Matricula(estudiante, this);
+            this.matriculas.add(nuevaMatricula);
+            estudiante.agregarMatricula(nuevaMatricula);
+        }
+    }
+
+    public boolean estaLleno() {
+        return matriculas.size() >= aula.getCapacidad();
+    }
+
+    public List<Estudiante> getEstudiantesMatriculados() {
+        return matriculas.stream()
+                .map(Matricula::getEstudiante)
+                .collect(Collectors.toList());
+    }
+
+    public void cancelar() {
+        for (Matricula m : new ArrayList<>(matriculas)) {
+            m.getEstudiante().getMatriculas().remove(m);
+        }
+        matriculas.clear();
+    }
+
+    public int getId() { return id; }
+    public void setId(int id) { this.id = id; }
+    public String getNombreSeccion() { return nombreSeccion; }
+    public Curso getCurso() { return curso; }
+    public void setCurso(Curso curso) { this.curso = curso; }
+    public Profesor getProfesor() { return profesor; }
+    public void setProfesor(Profesor profesor) { this.profesor = profesor; }
+    public Aula getAula() { return aula; }
+    public void setAula(Aula aula) { this.aula = aula; }
+    public List<Matricula> getMatriculas() { return new ArrayList<>(matriculas); }
+}
+
+class Matricula {
+    private Estudiante estudiante;
+    private Seccion seccion;
+    private LocalDate fechaMatricula;
+    private double porcentajeAsistencia;
+
+    public Matricula(Estudiante estudiante, Seccion seccion) {
+        this.estudiante = estudiante;
+        this.seccion = seccion;
+        this.fechaMatricula = LocalDate.now();
+        this.porcentajeAsistencia = 100.0;
+    }
+
+    public Curso getCurso() {
+        return this.seccion.getCurso();
+    }
+
+    public Estudiante getEstudiante() { return estudiante; }
+    public Seccion getSeccion() { return seccion; }
+    public LocalDate getFechaMatricula() { return fechaMatricula; }
+    public double getPorcentajeAsistencia() { return porcentajeAsistencia; }
+    public void setPorcentajeAsistencia(double porcentajeAsistencia) {
+        this.porcentajeAsistencia = Math.max(0, Math.min(100, porcentajeAsistencia));
+    }
+}
+
+class Calificacion {
+    private double valor;
+    private String descripcion;
+    private LocalDate fecha;
+    private Matricula matricula;
+
+    public Calificacion(double valor, String descripcion, Matricula matricula) {
+        this.valor = Math.max(0, Math.min(10, valor));
+        this.descripcion = descripcion;
+        this.fecha = LocalDate.now();
+        this.matricula = matricula;
+    }
+
+    public double getValor() { return valor; }
+    public String getDescripcion() { return descripcion; }
+    public LocalDate getFecha() { return fecha; }
+    public Matricula getMatricula() { return matricula; }
+}
+
+class HistorialAcademico {
+    private final Estudiante estudiante;
+    private final List<Calificacion> todasLasCalificaciones;
+
+    public HistorialAcademico(Estudiante estudiante) {
+        this.estudiante = estudiante;
+        this.todasLasCalificaciones = new ArrayList<>();
+    }
+
+    public void registrarCalificacion(Calificacion calificacion) {
+        if (calificacion != null) {
+            this.todasLasCalificaciones.add(calificacion);
+        }
+    }
+
+    public double calcularPromedioHistorico() {
+        if (todasLasCalificaciones.isEmpty()) return 0.0;
+        return todasLasCalificaciones.stream().mapToDouble(Calificacion::getValor).average().orElse(0.0);
+    }
+
+    public double calcularTendenciaCalificaciones() {
+        if (todasLasCalificaciones.size() < 4) return 0.0;
+        List<Calificacion> sorted = new ArrayList<>(todasLasCalificaciones);
+        sorted.sort(Comparator.comparing(Calificacion::getFecha));
+        int n = sorted.size();
+        double promedioReciente = (sorted.get(n-1).getValor() + sorted.get(n-2).getValor()) / 2.0;
+        double promedioAnterior = (sorted.get(n-3).getValor() + sorted.get(n-4).getValor()) / 2.0;
+        return promedioReciente - promedioAnterior;
+    }
+
+    public List<Calificacion> getTodasLasCalificaciones() {
+        return new ArrayList<>(todasLasCalificaciones);
+    }
+}
+
+class PrediccionRendimiento {
+    private int id;
+    private Estudiante estudiante;
+    private Seccion seccion;
+    private LocalDate fechaPrediccion;
+    private double puntajeRiesgo;
+    private NivelRiesgo nivelRiesgo;
+    private String recomendacion;
+
+    public PrediccionRendimiento(int id, Estudiante estudiante, Seccion seccion) {
+        this.id = id;
+        this.estudiante = estudiante;
+        this.seccion = seccion;
+        this.fechaPrediccion = LocalDate.now();
+    }
+
+    public PrediccionRendimiento(Estudiante estudiante, Seccion seccion) {
+        this(0, estudiante, seccion);
+    }
+
+    public void mostrarDetalles() {
+        System.out.println("--- PREDICCIÓN DE RENDIMIENTO ---");
+        System.out.println("Estudiante: " + (estudiante != null ? estudiante.getNombre() : "N/A"));
+        System.out.println("Curso: " + (seccion != null ? seccion.getCurso().getNombre() : "N/A"));
+        System.out.println("Fecha: " + fechaPrediccion);
+        System.out.println("Puntaje de Riesgo: " + String.format("%.2f", puntajeRiesgo));
+        System.out.println("Nivel de Riesgo: " + nivelRiesgo);
+        System.out.println("Recomendación: " + recomendacion);
+        System.out.println("---------------------------------");
+    }
+
+    public int getId() { return id; }
+    public void setId(int id) { this.id = id; }
+    public Estudiante getEstudiante() { return estudiante; }
+    public void setEstudiante(Estudiante estudiante) { this.estudiante = estudiante; }
+    public Seccion getSeccion() { return seccion; }
+    public double getPuntajeRiesgo() { return puntajeRiesgo; }
+    public void setPuntajeRiesgo(double puntajeRiesgo) { this.puntajeRiesgo = puntajeRiesgo; }
+    public NivelRiesgo getNivelRiesgo() { return nivelRiesgo; }
+    public void setNivelRiesgo(NivelRiesgo nivelRiesgo) { this.nivelRiesgo = nivelRiesgo; }
+    public String getRecomendacion() { return recomendacion; }
+    public void setRecomendacion(String recomendacion) { this.recomendacion = recomendacion; }
+}
+
+interface UsuarioRepository {
+    void save(Usuario usuario);
+    Usuario findById(int id);
+    Usuario findByEmail(String email);
+    List<Usuario> findAll();
+}
+
+class UsuarioRepositoryImpl implements UsuarioRepository {
+    private Map<Integer, Usuario> usuarios = new HashMap<>();
+    private AtomicInteger idGenerator = new AtomicInteger(1);
+
+    @Override
+    public void save(Usuario usuario) {
+        if (usuario.getId() == 0) {
+            int newId = idGenerator.getAndIncrement();
+            if (usuario instanceof Admin) {
+                Admin a = (Admin) usuario;
+                usuario = new Admin(newId, a.getNombre(), a.getApellido(), a.getEmail(), a.getPassword(), a.getNivelAcceso());
+            } else if (usuario instanceof Profesor) {
+                Profesor p = (Profesor) usuario;
+                usuario = new Profesor(newId, p.getNombre(), p.getApellido(), p.getEmail(), p.getPassword(), p.getDepartamento());
+            } else if (usuario instanceof Estudiante) {
+                Estudiante e = (Estudiante) usuario;
+                usuario = new Estudiante(newId, e.getNombre(), e.getApellido(), e.getEmail(), e.getPassword(), e.getMatricula(), e.getFechaIngreso());
+            }
+        }
+        usuarios.put(usuario.getId(), usuario);
+    }
+
+    @Override
+    public Usuario findById(int id) {
+        return usuarios.get(id);
+    }
+
+    @Override
+    public Usuario findByEmail(String email) {
+        return usuarios.values().stream().filter(u -> u.getEmail().equals(email)).findFirst().orElse(null);
+    }
+
+    @Override
+    public List<Usuario> findAll() {
+        return new ArrayList<>(usuarios.values());
+    }
+}
+
+interface CursoRepository {
+    void save(Curso curso);
+    Curso findById(int id);
+    List<Curso> findAll();
+}
+
+class CursoRepositoryImpl implements CursoRepository {
+    private Map<Integer, Curso> cursos = new HashMap<>();
+    private AtomicInteger idGenerator = new AtomicInteger(1);
+
+    @Override
+    public void save(Curso curso) {
+        if (curso.getId() == 0) {
+            int newId = idGenerator.getAndIncrement();
+            curso = new Curso(newId, curso.getNombre(), curso.getDescripcion(), curso.getCreditos(), curso.getArea(), curso.getNivelDificultad());
+        }
+        cursos.put(curso.getId(), curso);
+    }
+
+    @Override
+    public Curso findById(int id) {
+        return cursos.get(id);
+    }
+
+    @Override
+    public List<Curso> findAll() {
+        return new ArrayList<>(cursos.values());
+    }
+}
+
+interface SeccionRepository {
+    void save(Seccion seccion);
+    Seccion findById(int id);
+    List<Seccion> findByProfesor(Profesor profesor);
+    List<Seccion> findAll();
+}
+
+class SeccionRepositoryImpl implements SeccionRepository {
+    private Map<Integer, Seccion> secciones = new HashMap<>();
+    private AtomicInteger idGenerator = new AtomicInteger(1);
+
+    @Override
+    public void save(Seccion seccion) {
+        if (seccion.getId() == 0) {
+            int newId = idGenerator.getAndIncrement();
+            seccion = new Seccion(newId, seccion.getNombreSeccion(), seccion.getSemestre(), seccion.getCurso(), seccion.getProfesor(), seccion.getAula());
+        }
+        secciones.put(seccion.getId(), seccion);
+    }
+
+    @Override
+    public Seccion findById(int id) {
+        return secciones.get(id);
+    }
+
+    @Override
+    public List<Seccion> findByProfesor(Profesor profesor) {
+        return secciones.values().stream().filter(s -> s.getProfesor().getId() == profesor.getId()).collect(Collectors.toList());
+    }
+
+    @Override
+    public List<Seccion> findAll() {
+        return new ArrayList<>(secciones.values());
+    }
+}
+
+interface AulaRepository {
+    void save(Aula aula);
+    Aula findByCodigo(String codigo);
+    List<Aula> findAll();
+}
+
+class AulaRepositoryImpl implements AulaRepository {
+    private Map<String, Aula> aulas = new HashMap<>();
+
+    @Override
+    public void save(Aula aula) {
+        aulas.put(aula.getCodigo(), aula);
+    }
+
+    @Override
+    public Aula findByCodigo(String codigo) {
+        return aulas.get(codigo);
+    }
+
+    @Override
+    public List<Aula> findAll() {
+        return new ArrayList<>(aulas.values());
+    }
+}
+
+interface PrediccionRendimientoRepository {
+    void save(PrediccionRendimiento prediccion);
+    List<PrediccionRendimiento> findByEstudiante(Estudiante estudiante);
+    List<PrediccionRendimiento> findAll();
+}
+
+class PrediccionRendimientoRepositoryImpl implements PrediccionRendimientoRepository {
+    private Map<Integer, PrediccionRendimiento> predicciones = new HashMap<>();
+    private AtomicInteger idGenerator = new AtomicInteger(1);
+
+    @Override
+    public void save(PrediccionRendimiento prediccion) {
+        if (prediccion.getId() == 0) {
+            int newId = idGenerator.getAndIncrement();
+            prediccion = new PrediccionRendimiento(newId, prediccion.getEstudiante(), prediccion.getSeccion());
+        }
+        predicciones.put(prediccion.getId(), prediccion);
+    }
+
+    @Override
+    public List<PrediccionRendimiento> findByEstudiante(Estudiante estudiante) {
+        return predicciones.values().stream().filter(p -> p.getEstudiante().getId() == estudiante.getId()).collect(Collectors.toList());
+    }
+
+    @Override
+    public List<PrediccionRendimiento> findAll() {
+        return new ArrayList<>(predicciones.values());
+    }
+}
+
+class UsuarioService {
+    private final UsuarioRepository usuarioRepo;
+
+    public UsuarioService(UsuarioRepository usuarioRepo) {
+        this.usuarioRepo = usuarioRepo;
+    }
+
+    public void registrarUsuario(Usuario usuario) {
+        if (usuarioRepo.findByEmail(usuario.getEmail()) == null) {
+            usuarioRepo.save(usuario);
+        } else {
+            throw new IllegalArgumentException("Email ya registrado");
+        }
+    }
+
+    public Usuario login(String email, String password) {
+        Usuario usuario = usuarioRepo.findByEmail(email);
+        if (usuario != null && usuario.getPassword().equals(password)) {
+            return usuario;
+        }
+        return null;
+    }
+
+    public void eliminarUsuario(int id) {
+        // Implementar si necesario
+    }
+
+    public List<Usuario> getAllUsuarios() {
+        return usuarioRepo.findAll();
+    }
+}
+
+class CursoService {
+    private final CursoRepository cursoRepo;
+    private final SeccionRepository seccionRepo;
+
+    public CursoService(CursoRepository cursoRepo, SeccionRepository seccionRepo) {
+        this.cursoRepo = cursoRepo;
+        this.seccionRepo = seccionRepo;
+    }
+
+    public void crearCurso(Curso curso) {
+        cursoRepo.save(curso);
+    }
+
+    public void agregarSeccionAcurso(Curso curso, Seccion seccion) {
+        curso.agregarSeccion(seccion);
+        seccionRepo.save(seccion);
+    }
+
+    public List<Curso> getAllCursos() {
+        return cursoRepo.findAll();
+    }
+}
+
+class SeccionService {
+    private final SeccionRepository seccionRepo;
+
+    public SeccionService(SeccionRepository seccionRepo) {
+        this.seccionRepo = seccionRepo;
+    }
+
+    public void crearSeccion(Seccion seccion) {
+        seccionRepo.save(seccion);
+    }
+
+    public void matricularEstudiante(Seccion seccion, Estudiante estudiante) {
+        seccion.matricularEstudiante(estudiante);
+        // Save if persistent
+    }
+
+    public List<Seccion> getSeccionesPorProfesor(Profesor profesor) {
+        return seccionRepo.findByProfesor(profesor);
+    }
+}
+
+class PrediccionService {
+    private final PrediccionRendimientoRepository prediccionRepo;
+
+    public PrediccionService(PrediccionRendimientoRepository prediccionRepo) {
+        this.prediccionRepo = prediccionRepo;
+    }
+
+    public PrediccionRendimiento generarPrediccion(Estudiante estudiante, Seccion seccion) {
+        PrediccionRendimiento prediccion = new PrediccionRendimiento(estudiante, seccion);
+        double riesgo = calcularRiesgo(estudiante, seccion);
+        prediccion.setPuntajeRiesgo(riesgo);
+        prediccion.setNivelRiesgo(determinarNivelRiesgo(riesgo));
+        prediccion.setRecomendacion(generarRecomendacion(prediccion.getNivelRiesgo()));
+        prediccionRepo.save(prediccion);
+        estudiante.agregarPrediccion(prediccion);
+        return prediccion;
+    }
+
+    private double calcularRiesgo(Estudiante estudiante, Seccion seccion) {
+        double promedio = estudiante.getHistorialAcademico().calcularPromedioHistorico();
+        double tendencia = estudiante.getHistorialAcademico().calcularTendenciaCalificaciones();
+        double dificultad = seccion.getCurso().getNivelDificultad();
+        double asistencia = seccion.getMatriculas().stream()
+                .filter(m -> m.getEstudiante().getId() == estudiante.getId())
+                .findFirst().map(Matricula::getPorcentajeAsistencia).orElse(100.0);
+        double riesgo = (10 - promedio) * 10 + (dificultad * 2) - (asistencia / 2) - (tendencia * 5);
+        return Math.max(0, Math.min(100, riesgo));
+    }
+
+    private NivelRiesgo determinarNivelRiesgo(double riesgo) {
+        if (riesgo < 25) return NivelRiesgo.BAJO;
+        if (riesgo < 50) return NivelRiesgo.MEDIO;
+        if (riesgo < 75) return NivelRiesgo.ALTO;
+        return NivelRiesgo.CRITICO;
+    }
+
+    private String generarRecomendacion(NivelRiesgo nivel) {
+        switch (nivel) {
+            case BAJO: return "Mantén el buen trabajo.";
+            case MEDIO: return "Mejora la asistencia y estudio.";
+            case ALTO: return "Busca tutoría inmediatamente.";
+            case CRITICO: return "Alerta: Riesgo alto de deserción. Contacta al consejero.";
+            default: return "";
+        }
+    }
+
+    public List<PrediccionRendimiento> getPrediccionesPorEstudiante(Estudiante estudiante) {
+        return prediccionRepo.findByEstudiante(estudiante);
+    }
+}
+
+class CalificacionService {
+    public void asignarCalificacion(Estudiante estudiante, Matricula matricula, double valor, String descripcion) {
+        Calificacion calif = new Calificacion(valor, descripcion, matricula);
+        estudiante.getHistorialAcademico().registrarCalificacion(calif);
+    }
+}
+
+class LoginFrame extends JFrame {
+    private JTextField emailField;
+    private JPasswordField passwordField;
+    private JButton loginButton;
+    private final UsuarioService usuarioService;
+    private final CursoService cursoService;
+    private final SeccionService seccionService;
+    private final PrediccionService prediccionService;
+    private final CalificacionService calificacionService;
+
+    public LoginFrame(UsuarioService usuarioService, CursoService cursoService, SeccionService seccionService, PrediccionService prediccionService, CalificacionService calificacionService) {
+        this.usuarioService = usuarioService;
+        this.cursoService = cursoService;
+        this.seccionService = seccionService;
+        this.prediccionService = prediccionService;
+        this.calificacionService = calificacionService;
+        initComponents();
+    }
+
+    private void initComponents() {
+        setTitle("Login");
+        setSize(300, 200);
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        JPanel panel = new JPanel();
+        emailField = new JTextField(20);
+        passwordField = new JPasswordField(20);
+        loginButton = new JButton("Login");
+        panel.add(new JLabel("Email:"));
+        panel.add(emailField);
+        panel.add(new JLabel("Password:"));
+        panel.add(passwordField);
+        panel.add(loginButton);
+        add(panel);
+
+        loginButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                String email = emailField.getText();
+                String password = new String(passwordField.getPassword());
+                Usuario usuario = usuarioService.login(email, password);
+                if (usuario != null) {
+                    switch (usuario.getRol()) {
+                        case ADMIN:
+                            new AdminPanel((Admin) usuario, usuarioService, cursoService).setVisible(true);
+                            break;
+                        case PROFESOR:
+                            new ProfesorPanel((Profesor) usuario, seccionService, calificacionService, prediccionService).setVisible(true);
+                            break;
+                        case ESTUDIANTE:
+                            new EstudiantePanel((Estudiante) usuario, prediccionService).setVisible(true);
+                            break;
+                    }
+                    dispose();
+                } else {
+                    JOptionPane.showMessageDialog(null, "Credenciales inválidas");
+                }
+            }
+        });
+    }
+}
+
+class AdminPanel extends JFrame {
+    private JButton crearUsuarioButton, crearCursoButton;
+    private JTable usuariosTable;
+    private final Admin admin;
+    private final UsuarioService usuarioService;
+    private final CursoService cursoService;
+
+    public AdminPanel(Admin admin, UsuarioService usuarioService, CursoService cursoService) {
+        this.admin = admin;
+        this.usuarioService = usuarioService;
+        this.cursoService = cursoService;
+        initComponents();
+    }
+
+    private void initComponents() {
+        setTitle("Panel Admin");
+        setSize(600, 400);
+        JPanel panel = new JPanel();
+        crearUsuarioButton = new JButton("Crear Usuario");
+        crearCursoButton = new JButton("Crear Curso");
+        usuariosTable = new JTable();
+        panel.add(crearUsuarioButton);
+        panel.add(crearCursoButton);
+        panel.add(new JScrollPane(usuariosTable));
+        add(panel);
+
+        crearUsuarioButton.addActionListener(e -> {
+            // Implementar dialogo para crear usuario
+            actualizarTabla();
+        });
+
+        crearCursoButton.addActionListener(e -> {
+            // Implementar dialogo para crear curso
+        });
+
+        actualizarTabla();
+    }
+
+    private void actualizarTabla() {
+        List<Usuario> usuarios = usuarioService.getAllUsuarios();
+        DefaultTableModel model = new DefaultTableModel(new String[]{"ID", "Nombre", "Rol"}, 0);
+        for (Usuario u : usuarios) {
+            model.addRow(new Object[]{u.getId(), u.getNombre(), u.getRol()});
+        }
+        usuariosTable.setModel(model);
+    }
+}
+
+class ProfesorPanel extends JFrame {
+    private JComboBox<Seccion> seccionesCombo;
+    private JTable estudiantesTable;
+    private JButton asignarCalifButton;
+    private final Profesor profesor;
+    private final SeccionService seccionService;
+    private final CalificacionService califService;
+    private final PrediccionService prediccionService;
+    private List<Estudiante> currentEstudiantes = new ArrayList<>();
+
+    public ProfesorPanel(Profesor profesor, SeccionService seccionService, CalificacionService califService, PrediccionService prediccionService) {
+        this.profesor = profesor;
+        this.seccionService = seccionService;
+        this.califService = califService;
+        this.prediccionService = prediccionService;
+        initComponents();
+    }
+
+    private void initComponents() {
+        setTitle("Panel Profesor");
+        setSize(600, 400);
+        JPanel panel = new JPanel();
+        seccionesCombo = new JComboBox<>();
+        estudiantesTable = new JTable();
+        asignarCalifButton = new JButton("Asignar Calificación");
+        panel.add(new JLabel("Sección:"));
+        panel.add(seccionesCombo);
+        panel.add(new JScrollPane(estudiantesTable));
+        panel.add(asignarCalifButton);
+        add(panel);
+
+        cargarSecciones();
+
+        seccionesCombo.addActionListener(e -> actualizarEstudiantes());
+
+        asignarCalifButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                int row = estudiantesTable.getSelectedRow();
+                if (row >= 0 && row < currentEstudiantes.size()) {
+                    Estudiante est = currentEstudiantes.get(row);
+                    Seccion seccion = (Seccion) seccionesCombo.getSelectedItem();
+                    Matricula mat = null;
+                    for (Matricula m : est.getMatriculas()) {
+                        if (m.getSeccion() == seccion) {
+                            mat = m;
+                            break;
+                        }
+                    }
+                    if (mat != null) {
+                        String desc = JOptionPane.showInputDialog("Descripción");
+                        String valorStr = JOptionPane.showInputDialog("Valor (0-10)");
+                        if (valorStr != null) {
+                            try {
+                                double valor = Double.parseDouble(valorStr);
+                                califService.asignarCalificacion(est, mat, valor, desc);
+                                prediccionService.generarPrediccion(est, seccion);
+                            } catch (NumberFormatException ex) {
+                                JOptionPane.showMessageDialog(null, "Valor inválido");
+                            }
+                        }
+                    } else {
+                        JOptionPane.showMessageDialog(null, "Matrícula no encontrada");
+                    }
+                }
+            }
+        });
+    }
+
+    private void cargarSecciones() {
+        List<Seccion> secciones = seccionService.getSeccionesPorProfesor(profesor);
+        for (Seccion s : secciones) {
+            seccionesCombo.addItem(s);
+        }
+    }
+
+    private void actualizarEstudiantes() {
+        Seccion seccion = (Seccion) seccionesCombo.getSelectedItem();
+        if (seccion != null) {
+            List<Estudiante> estudiantes = seccion.getEstudiantesMatriculados();
+            currentEstudiantes = new ArrayList<>(estudiantes);
+            DefaultTableModel model = new DefaultTableModel(new String[]{"Nombre", "Promedio"}, 0);
+            for (Estudiante e : estudiantes) {
+                model.addRow(new Object[]{e.getNombre(), e.getPromedioGeneral()});
+            }
+            estudiantesTable.setModel(model);
+        }
+    }
+}
+
+class EstudiantePanel extends JFrame {
+    private JTable calificacionesTable;
+    private JLabel riesgoLabel;
+    private final Estudiante estudiante;
+    private final PrediccionService prediccionService;
+
+    public EstudiantePanel(Estudiante estudiante, PrediccionService prediccionService) {
+        this.estudiante = estudiante;
+        this.prediccionService = prediccionService;
+        initComponents();
+    }
+
+    private void initComponents() {
+        setTitle("Portal Estudiante");
+        setSize(600, 400);
+        JPanel panel = new JPanel();
+        calificacionesTable = new JTable();
+        riesgoLabel = new JLabel("Nivel de Riesgo: ");
+        panel.add(new JScrollPane(calificacionesTable));
+        panel.add(riesgoLabel);
+        add(panel);
+
+        actualizarDatos();
+    }
+
+    private void actualizarDatos() {
+        List<Calificacion> califs = estudiante.getHistorialAcademico().getTodasLasCalificaciones();
+        DefaultTableModel model = new DefaultTableModel(new String[]{"Descripción", "Valor", "Fecha"}, 0);
+        for (Calificacion c : califs) {
+            model.addRow(new Object[]{c.getDescripcion(), c.getValor(), c.getFecha()});
+        }
+        calificacionesTable.setModel(model);
+
+        List<PrediccionRendimiento> preds = prediccionService.getPrediccionesPorEstudiante(estudiante);
+        if (!preds.isEmpty()) {
+            PrediccionRendimiento ultima = preds.get(preds.size() - 1);
+            riesgoLabel.setText("Nivel de Riesgo: " + ultima.getNivelRiesgo() + " - " + ultima.getRecomendacion());
+        }
+    }
+}
+
+public class Main {
+    public static void main(String[] args) {
+        UsuarioRepository usuarioRepo = new UsuarioRepositoryImpl();
+        CursoRepository cursoRepo = new CursoRepositoryImpl();
+        SeccionRepository seccionRepo = new SeccionRepositoryImpl();
+        AulaRepository aulaRepo = new AulaRepositoryImpl();
+        PrediccionRendimientoRepository prediccionRepo = new PrediccionRendimientoRepositoryImpl();
+
+        UsuarioService usuarioService = new UsuarioService(usuarioRepo);
+        CursoService cursoService = new CursoService(cursoRepo, seccionRepo);
+        SeccionService seccionService = new SeccionService(seccionRepo);
+        PrediccionService prediccionService = new PrediccionService(prediccionRepo);
+        CalificacionService califService = new CalificacionService();
+
+        // Datos de prueba
+        Admin admin = new Admin("Admin", "Uno", "admin@email.com", "pass", "Full");
+        usuarioService.registrarUsuario(admin);
+
+        // Agregar más datos de prueba si necesario...
+
+        SwingUtilities.invokeLater(() -> new LoginFrame(usuarioService, cursoService, seccionService, prediccionService, califService).setVisible(true));
+    }
+}

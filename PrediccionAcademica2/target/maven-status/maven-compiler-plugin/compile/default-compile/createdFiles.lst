@@ -1,5 +1,4 @@
 servicio\ServicioEstudiante.class
-Vista\frmProfesors$4.class
 Dominio\Calificacion.class
 servicio\ServicioCalificación.class
 servicio\ServicioCurso.class
@@ -10,7 +9,6 @@ servicio\ServicioUsuario.class
 Vista\frmEstudiante$2.class
 Vista\frmEstudiante.class
 Dominio\Seccion.class
-Vista\frmEstudiante$5.class
 Vista\frmIusuario$8.class
 Dominio\Matricula.class
 Vista\frmCursos$3.class
@@ -29,9 +27,7 @@ Vista\frmProfesors$1.class
 Vista\frmEstudiante$1.class
 Vista\frmUsuario.class
 util.class
-Vista\frmEstudiante$4.class
 Dominio\Curso.class
-Vista\frmProfesors$2.class
 Dominio\Profesor.class
 Dominio\PrediccionRendimiento.class
 Dominio\Estudiante.class
@@ -47,7 +43,6 @@ Vista\frmIusuario$4.class
 Vista\frmIusuario$10.class
 Dominio\Usuario.class
 servicio\ServicioPredictivo.class
-Vista\frmEstudiante$3.class
 Vista\frmIusuario.class
 Vista\frmIusuario$7.class
 Vista\frmUsuario$2.class
@@ -55,4 +50,3 @@ Vista\frmIusuario$1.class
 util\RolUsuario.class
 Vista\frmCursos$2.class
 Vista\frmIusuario$13.class
-Vista\frmProfesors$3.class
