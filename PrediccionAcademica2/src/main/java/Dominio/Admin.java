@@ -14,6 +14,7 @@ public class Admin extends Usuario {
     @Override
     public void mostrarInformacion() {
         System.out.println("Administrador: " + getNombre());
+        System.out.println("");
     }
 
    
@@ -38,8 +39,8 @@ public class Admin extends Usuario {
 
 
 
-}    
-    
+}
+
     
     
     

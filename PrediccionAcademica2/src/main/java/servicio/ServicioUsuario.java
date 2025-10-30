@@ -4,7 +4,17 @@ public class ServicioUsuario {
     public void verificarUsuario(){
         
     }
-    public void AgregarUsuario(){
+    public void RegistrarUsuario(){
         
     }
+    public void matricularEstudiante(){}
+    public void generarReporte(){}
+    
+   public void eliminiarUsuario(){}
+
+    
+
+
+
+    
 }

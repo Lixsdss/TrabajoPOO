@@ -91,10 +91,7 @@ public class ServicioProfesor {
 
     // Obtener todos los profesores
     public List<Profesor> getAllProfesores() {
-        return usuarioRepo.findAll().stream()
-                .filter(u -> u.getRol() == RolUsuario.PROFESOR)
-                .map(u -> (Profesor) u)
-                .collect(Collectors.toList());
+        return usuarioRepo.findAll().stream().filter(u -> u.getRol() == RolUsuario.PROFESOR).map(u -> (Profesor) u).collect(Collectors.toList());
     } 
     public void registrarNotas(){
         
